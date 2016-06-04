@@ -122,14 +122,14 @@ FORCE_INLINE __m128 _mm_setr_ps(float w, float z , float y , float x )
 }
 
 // Sets the 16 signed 8-bit integer values in reverse order. https://msdn.microsoft.com/en-us/library/2khb9c7k(v=vs.90).aspx
-FORCE_INLINE __m128i  _mm_setr_epi8(char b0, char b1, char b2, char b3, char b4, char b5,char b6, char b7,   char b8, char b9,   char b10, char b11,   char b12, char b13,   char b14, char b15)
+FORCE_INLINE __m128i  _mm_setr_epi8(int8_t b0, int8_t b1, int8_t b2, int8_t b3, int8_t b4, int8_t b5, int8_t b6, int8_t b7, int8_t b8, int8_t b9, int8_t b10, int8_t b11, int8_t b12, int8_t b13, int8_t b14, int8_t b15)
 {
 	int8_t __attribute__ ((aligned (16))) data[16] = { b0, b1, b2, b3, b4, b5, b6, b7, b8, b9, b10, b11, b12, b13, b14, b15 };
-	return vld1q_s32((int8_t)data);
+	return (__m128i)vld1q_s8(data);
 }
-FORCE_INLINE __m128i _mm_set1_epi16(int _i)
+FORCE_INLINE __m128i _mm_set1_epi16(int16_t _i)
 {
-	return vdupq_n_s16((int16_t)_i);
+	return (__m128i)vdupq_n_s16((int16_t)_i);
 }
 
 // Sets the 4 signed 32-bit integer values to i. https://msdn.microsoft.com/en-us/library/vstudio/h4xscxat(v=vs.100).aspx
@@ -138,16 +138,16 @@ FORCE_INLINE __m128i _mm_set1_epi32(int _i)
 	return vdupq_n_s32(_i);
 }
 
-FORCE_INLINE __m128i _mm_set1_epi8(int _i)
+FORCE_INLINE __m128i _mm_set1_epi8(int32_t _i)
 {
-	return vdupq_n_s8(_i);
+	return (__m128i)vdupq_n_s32(_i);
 }
 
 // Sets the 4 signed 32-bit integer values. https://msdn.microsoft.com/en-us/library/vstudio/019beekt(v=vs.100).aspx
 FORCE_INLINE __m128i _mm_set_epi32(int i3, int i2, int i1, int i0)
 {
 	int32_t __attribute__((aligned(16))) data[4] = { i0, i1, i2, i3 };
-	return vld1q_s32(data);
+	return (__m128i)vld1q_s32(data);
 }
 
 // Stores four single-precision, floating-point values. https://msdn.microsoft.com/en-us/library/vstudio/s3h4ay6y(v=vs.100).aspx
@@ -550,14 +550,14 @@ FORCE_INLINE __m128i _mm_shufflehi_epi16_function(__m128i a)
 
 // Shuffles the upper 4 signed or unsigned 16 - bit integers in a as specified by imm.  https://msdn.microsoft.com/en-us/library/13ywktbs(v=vs.100).aspx
 #define _mm_shufflehi_epi16(a,i) _mm_shufflehi_epi16_function<i>(a)
-#define uint8x16_to_8x8x2(v) ((uint8x8x2_t) { vget_low_u8(v), vget_high_u8(v) })
 
 // select i-th 8 bit from a  https://msdn.microsoft.com/en-us/library/bb531427(v=vs.120).aspx
-FORCE_INLINE __m128i _mm_shuffle_epi8(__m128i a,__m128i mask)
+FORCE_INLINE __m128i _mm_shuffle_epi8(__m128i src,__m128i mask)
 {
-	int8x16_t a = vld1q_s8((int8_t *) a;
-	int8x16_t ret=vcombine_s8(vtbl2_s8(int8x16_to_8x8x2(a),vget_low_s8(mask)),vtbl2_s8(int8x16_to_8x8x2(a),vget_high_s8(mask)));
-	return (__m128i)ret;
+	__m128i ret;
+	for (int i = 0; i < 16; i++)
+    	ret[i] = (mask[i] & 0x80) == 0 ? src[mask[i] & 15] : 0;
+	return ret;
 }
 #define _mm_slli_epi16(a, imm) (__m128i)vshlq_n_s16((int16x8_t)a,imm)
 
@@ -621,12 +621,13 @@ FORCE_INLINE __m128 _mm_sub_ps(__m128 a, __m128 b)
 
 FORCE_INLINE __m128i _mm_subs_epi16(__m128i a, __m128i b)
 {
-	return (__m128i)vqsub_s16((int16x8_t)a, (int16x8_t)b);
+	return (__m128i)vqsubq_s16((int16x8_t)a, (int16x8_t)b);
 }
 
 FORCE_INLINE __m128i _mm_sub_epi16(__m128i a, __m128i b)
 {
 	return (__m128i)vsubq_s16((int16x8_t)a, (int16x8_t)b);
+
 }
 
 // Subtracts the 4 signed or unsigned 32-bit integers of b from the 4 signed or unsigned 32-bit integers of a. https://msdn.microsoft.com/en-us/library/vstudio/fhh866h0(v=vs.100).aspx
@@ -993,7 +994,7 @@ FORCE_INLINE __m128i _mm_unpackhi_epi32(__m128i a, __m128i b)
 
 FORCE_INLINE __m128i _mm_alignr_epi8(__m128i a, __m128i b, const int c)
 {
-	return vextq_s32 (a, b, c);
+	return (__m128i) vextq_s8 ((int8x16_t) a,(int8x16_t) b, c);
 }
 
 // Extracts the selected signed or unsigned 16-bit integer from a and zero extends.  https://msdn.microsoft.com/en-us/library/6dceta0c(v=vs.100).aspx
